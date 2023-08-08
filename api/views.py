@@ -1,50 +1,36 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .serializers import UserSerializer,UserProfileSerializer
-from .models import User
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import render,redirect
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import get_user_model
+from .models import CustomUser
 from django.contrib.auth import authenticate
-from rest_framework import generics, permissions
-from .models import UserProfile
-
-# Create your views here.
-
-class RegisterUSer(APIView):
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-    
 
 
-class Login(APIView):
-    def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
-        user = User.objects.filter(email=email).first()
-        # user = authenticate(email=username, password=password)
-        print("user...",user)
-        if user is None or not user.check_password(password):
-            raise AuthenticationFailed("Invalid credentials.")
-
-        
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-        return Response({'access_token': access_token, 'refresh_token': refresh_token})
-    
-
-class UserProfileCreationAPIView(generics.CreateAPIView):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+def homePage(request):
+    return render(request,'index.html')
 
 
-class UserProfileRetrieveAPIView(generics.RetrieveAPIView):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+def register(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        email = request.POST['email']
+        username = request.POST['username']
+        password = request.POST['password']
+        user = CustomUser.objects.create_user(username=username, email=email, password=password)
+        user.name = name
+        user.save()
+        return redirect('login')  
+    return render(request, 'register.html')
+
+
+def login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            return redirect('home')  
+        else:
+            return render(request, 'login.html', {'error_message': 'Invalid credentials'})
+
+    return render(request, 'login.html')
+   
