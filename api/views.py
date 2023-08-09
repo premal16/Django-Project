@@ -5,6 +5,8 @@ from .models import CustomUser,UserProfile
 from django.contrib.auth import authenticate
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout
+from django.db import IntegrityError
+from django.http import JsonResponse
 
 def homePage(request):
     return render(request,'index.html')
@@ -60,7 +62,7 @@ def edit_profile(request):
     user = request.user
     print(user.email)
     profile, created = UserProfile.objects.get_or_create(user=user)
-
+    error_message = None 
     if request.method == 'POST':
         try:
             about = request.POST.get('about', '')
@@ -69,7 +71,6 @@ def edit_profile(request):
             country = request.POST.get('country', '')
             address = request.POST.get('address', '')
             email = request.POST.get('email', '')
-            print('this is email' ,email)
             mobile_number = request.POST.get('mobile_number')
             profile.job_title = job_title
             # Update profile fields and save
@@ -82,10 +83,11 @@ def edit_profile(request):
             if profile_pic:
                 profile.profile_pic = profile_pic
             profile.save()
-
             return redirect('profile')  
-        except Exception as e:
-            return print(e)
-
-
-    return render(request, 'profile.html')
+        except IntegrityError as e:
+            if 'UNIQUE constraint' in str(e) and 'email' in str(e):
+                error_message = "The provided email is already in use."
+            else:
+                error_message = "An error occurred while updating the profile." 
+            
+    return render(request, 'profile.html', {'error_message': error_message})
