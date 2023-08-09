@@ -10,6 +10,9 @@ urlpatterns = [
     # path('user/profile/<int:pk>/', UserProfileRetrieveAPIView.as_view()),
     path('',views.homePage, name='home'),
     path('login/', views.login, name='login'),
-    path('register/', views.register, name='register'),
+    path('register/', views.register_and_login, name='register'),
+    path('profile/', views.profilePage, name='profile'),
+    path('logout/', views.logout_view, name='logout'),
+    path('edit-profile/', views.edit_profile, name = 'edit_profile')
 
 ]
