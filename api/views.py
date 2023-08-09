@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout
 from django.db import IntegrityError
-from django.http import JsonResponse
+from django.contrib import messages
 
 def homePage(request):
     return render(request,'index.html')
@@ -91,3 +91,22 @@ def edit_profile(request):
                 error_message = "An error occurred while updating the profile." 
             
     return render(request, 'profile.html', {'error_message': error_message})
+
+
+def change_password(request):
+    if request.method == 'POST':
+        # Your password change logic here
+        current_password = request.POST.get('password')
+        new_password = request.POST.get('newpassword')
+        renew_password = request.POST.get('renewpassword')
+        
+        if request.user.check_password(current_password) and new_password == renew_password:
+            request.user.set_password(new_password)
+            request.user.save()
+            messages.success(request, "Password changed successfully. You have been logged out.")
+            logout(request)
+            return redirect('login')  
+        else:
+            messages.error(request, "Password change failed. Please check your inputs.")
+        
+    return render(request, 'profile.html')
