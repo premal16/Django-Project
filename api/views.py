@@ -1,5 +1,4 @@
 from django.shortcuts import render,redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 from .models import CustomUser,UserProfile
 from django.contrib.auth import authenticate
@@ -7,30 +6,53 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout
 from django.db import IntegrityError
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
+
+@login_required(login_url='login/')
 def homePage(request):
     return render(request,'index.html')
 
 
-def register_and_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        name = request.POST['name']
-        email = request.POST['email']
+# def register_and_login(request):
+#     try:
+#         if request.method == 'POST':
+#             username = request.POST['username']
+#             password = request.POST['password']
+#             name = request.POST['name']
+#             email = request.POST['email']
         
-        # Create the user
-        user = CustomUser.objects.create_user(username=username, password=password, name=name, email=email)
+#             user = CustomUser.objects.create_user(username=username, password=password, name=name, email=email)
+#             if user is not None:
+#                 return redirect('login')
+#             else:
+#                 return render(request, 'register.html', {'error_message': 'Error logging in after registration'})
+#         return render(request, 'register.html')
+#     except Exception as e:
+#         print("eror.................................",e)
 
-        # Log in the user
-        # user = authenticate(request, username=username, password=password)
-        if user is not None:
-            # auth_login(request, user)
-            return redirect('login')
-        else:
-            return render(request, 'register.html', {'error_message': 'Error logging in after registration'})
 
-    return render(request, 'register.html')
+def register_and_login(request):
+    try:
+        if request.method == 'POST':
+            username = request.POST['username']
+            password = request.POST['password']
+            name = request.POST['name']
+            email = request.POST['email']
+        
+            try:
+                user = CustomUser.objects.create_user(username=username, password=password, name=name, email=email)
+                if user is not None:
+                    return redirect('login')
+                else:
+                    return render(request, 'register.html', {'error_message': 'Error logging in after registration'})
+            except IntegrityError:
+                  # Handle the unique constraint error
+                return render(request, 'register.html', {'error_message': 'Email address is already in use. Please choose another email.'})
+        
+        return render(request, 'register.html')
+    except Exception as e:
+        print("error.................................", e)
 
 
 def login(request):
@@ -46,18 +68,18 @@ def login(request):
     return render(request, 'login.html')
    
 
-
+@login_required(login_url='/login/')
 def profilePage(request):
     return render(request,'profile.html')
 
-
+@login_required(login_url='/login/')
 def logout_view(request):
     logout(request)
     return redirect('login') 
 
 
 
-
+@login_required(login_url='/login/')
 def edit_profile(request):
     user = request.user
     print(user.email)
@@ -92,10 +114,9 @@ def edit_profile(request):
             
     return render(request, 'profile.html', {'error_message': error_message})
 
-
+@login_required(login_url='/login/')
 def change_password(request):
     if request.method == 'POST':
-        # Your password change logic here
         current_password = request.POST.get('password')
         new_password = request.POST.get('newpassword')
         renew_password = request.POST.get('renewpassword')
@@ -110,3 +131,7 @@ def change_password(request):
             messages.error(request, "Password change failed. Please check your inputs.")
         
     return render(request, 'profile.html')
+
+@login_required(login_url='/login/')
+def contactPage(request):
+    return render(request,'contact.html')
