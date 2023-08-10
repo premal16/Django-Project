@@ -13,25 +13,6 @@ from django.contrib.auth.decorators import login_required
 def homePage(request):
     return render(request,'index.html')
 
-
-# def register_and_login(request):
-#     try:
-#         if request.method == 'POST':
-#             username = request.POST['username']
-#             password = request.POST['password']
-#             name = request.POST['name']
-#             email = request.POST['email']
-        
-#             user = CustomUser.objects.create_user(username=username, password=password, name=name, email=email)
-#             if user is not None:
-#                 return redirect('login')
-#             else:
-#                 return render(request, 'register.html', {'error_message': 'Error logging in after registration'})
-#         return render(request, 'register.html')
-#     except Exception as e:
-#         print("eror.................................",e)
-
-
 def register_and_login(request):
     try:
         if request.method == 'POST':
@@ -47,7 +28,6 @@ def register_and_login(request):
                 else:
                     return render(request, 'register.html', {'error_message': 'Error logging in after registration'})
             except IntegrityError:
-                  # Handle the unique constraint error
                 return render(request, 'register.html', {'error_message': 'Email address is already in use. Please choose another email.'})
         
         return render(request, 'register.html')
